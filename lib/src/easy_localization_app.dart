@@ -283,6 +283,11 @@ class _EasyLocalizationProvider extends InheritedWidget {
     await _localeState.deleteSaveLocale();
   }
 
+  /// Reloads current locale
+  Future<void> reloadCurrentLocale() async {
+    await _localeState.setLocale(_localeState.locale);
+  }
+
   /// Getting device locale from platform
   Locale get deviceLocale => _localeState.deviceLocale;
   Locale? get savedLocale => _localeState.savedLocale;
@@ -292,8 +297,8 @@ class _EasyLocalizationProvider extends InheritedWidget {
 
   @override
   bool updateShouldNotify(_EasyLocalizationProvider oldWidget) {
-    return oldWidget.currentLocale != locale
-        || oldWidget._translationsLoaded != _translationsLoaded;
+    return oldWidget.currentLocale != locale ||
+        oldWidget._translationsLoaded != _translationsLoaded;
   }
 
   static _EasyLocalizationProvider? of(BuildContext context) =>
