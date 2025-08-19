@@ -166,12 +166,22 @@ class EasyLocalization extends StatefulWidget {
 }
 
 class _EasyLocalizationState extends State<EasyLocalization> {
-  _EasyLocalizationDelegate? delegate;
-  EasyLocalizationController? localizationController;
+  late _EasyLocalizationDelegate delegate;
+  late EasyLocalizationController localizationController;
   FlutterError? translationsLoadError;
+
+  void _listener() async {
+    if (mounted) {
+      final currentLocale = localizationController.locale;
+      await delegate.load(currentLocale);
+      setState(() {});
+    }
+  }
 
   @override
   void initState() {
+    super.initState();
+
     EasyLocalization.logger.debug('Init state');
     localizationController = EasyLocalizationController(
       saveLocale: widget.saveLocale,
@@ -189,16 +199,23 @@ class _EasyLocalizationState extends State<EasyLocalization> {
         });
       },
     );
+
+    delegate = _EasyLocalizationDelegate(
+      localizationController: localizationController,
+      supportedLocales: widget.supportedLocales,
+      useFallbackTranslationsForEmptyResources:
+          widget.useFallbackTranslationsForEmptyResources,
+      ignorePluralRules: widget.ignorePluralRules,
+    );
+
     // causes localization to rebuild with new language
-    localizationController!.addListener(() {
-      if (mounted) setState(() {});
-    });
-    super.initState();
+    localizationController.addListener(_listener);
   }
 
   @override
   void dispose() {
-    localizationController!.dispose();
+    localizationController.removeListener(_listener);
+    localizationController.dispose();
     super.dispose();
   }
 
@@ -210,16 +227,11 @@ class _EasyLocalizationState extends State<EasyLocalization> {
           ? widget.errorWidget!(translationsLoadError)
           : ErrorWidget(translationsLoadError!);
     }
+
     return _EasyLocalizationProvider(
       widget,
-      localizationController!,
-      delegate: _EasyLocalizationDelegate(
-        localizationController: localizationController,
-        supportedLocales: widget.supportedLocales,
-        useFallbackTranslationsForEmptyResources:
-            widget.useFallbackTranslationsForEmptyResources,
-        ignorePluralRules: widget.ignorePluralRules,
-      ),
+      localizationController,
+      delegate: delegate,
     );
   }
 }
@@ -285,7 +297,7 @@ class _EasyLocalizationProvider extends InheritedWidget {
 
   /// Reloads current locale
   Future<void> reloadCurrentLocale() async {
-    await _localeState.setLocale(_localeState.locale);
+    await _localeState.reloadCurrentLocale();
   }
 
   /// Getting device locale from platform

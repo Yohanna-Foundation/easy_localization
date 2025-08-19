@@ -162,9 +162,11 @@ class EasyLocalizationController extends ChangeNotifier {
     final result = <String, dynamic>{};
     final loaderFutures = <Future<Map<String, dynamic>?>>[];
 
-    // need scriptCode, it might be better to use ignoreCountryCode as the variable name of useOnlyLangCode 
-    final Locale desiredLocale =
-        useOnlyLangCode ? Locale.fromSubtags(languageCode: locale.languageCode, scriptCode: locale.scriptCode) : locale;
+    // need scriptCode, it might be better to use ignoreCountryCode as the variable name of useOnlyLangCode
+    final Locale desiredLocale = useOnlyLangCode
+        ? Locale.fromSubtags(
+            languageCode: locale.languageCode, scriptCode: locale.scriptCode)
+        : locale;
 
     List<AssetLoader> loaders = [
       assetLoader,
@@ -196,6 +198,14 @@ class EasyLocalizationController extends ChangeNotifier {
     await _saveLocale(_locale);
   }
 
+  /// Reloads current locale
+  Future<void> reloadCurrentLocale() async {
+    _translations = null;
+    _fallbackTranslations = null;
+    notifyListeners();
+    await setLocale(_locale);
+  }
+
   Future<void> _saveLocale(Locale? locale) async {
     if (!saveLocale) return;
     final preferences = await SharedPreferences.getInstance();
@@ -223,9 +233,12 @@ class EasyLocalizationController extends ChangeNotifier {
   Locale? get savedLocale => _savedLocale;
 
   Future<void> resetLocale() async {
-    final locale = selectLocaleFrom(_supportedLocales!, deviceLocale, fallbackLocale: _fallbackLocale);
+    final locale = selectLocaleFrom(_supportedLocales!, deviceLocale,
+        fallbackLocale: _fallbackLocale);
 
-    EasyLocalization.logger('Reset locale to $locale while the platform locale is $_deviceLocale and the fallback locale is $_fallbackLocale');
+    EasyLocalization.logger(
+      'Reset locale to $locale while the platform locale is $_deviceLocale and the fallback locale is $_fallbackLocale',
+    );
     await setLocale(locale);
   }
 }
